@@ -55,7 +55,7 @@ class _SignUpPageState extends State<SignUpPage> {
       final responseData = json.decode(await response.stream.bytesToString());
       return responseData['data']['url'];
     } else {
-      throw Exception("Error al subir la imagen a ImgBB");
+      throw Exception("Error to upload an image");
     }
   }
 
@@ -91,7 +91,7 @@ class _SignUpPageState extends State<SignUpPage> {
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor completa todos los campos')),
+        const SnackBar(content: Text('Please complete all fields')),
       );
     }
   }
@@ -100,7 +100,7 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registro'),
+        title: const Text('Sign in'),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -130,12 +130,12 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  "Crear una cuenta",
+                  "Create a password",
                   style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  "Regístrate para comenzar",
+                  "Register to get started",
                   style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                 ),
                 const SizedBox(height: 20),
@@ -143,7 +143,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 TextFormField(
                   controller: nameController,
                   decoration: const InputDecoration(
-                    labelText: 'Nombre completo',
+                    labelText: 'Complete name',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -152,7 +152,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 TextFormField(
                   controller: emailController,
                   decoration: const InputDecoration(
-                    labelText: 'Correo electrónico',
+                    labelText: 'Email',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -191,7 +191,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             color: Colors.white,
                           )
                         : const Text(
-                            'Registrarse',
+                            'Sign in',
                             style: TextStyle(color: Colors.white),
                           ),
                   ),
@@ -201,11 +201,11 @@ class _SignUpPageState extends State<SignUpPage> {
                 Center(
                   child: RichText(
                     text: TextSpan(
-                      text: "¿Ya tienes una cuenta? ",
+                      text: "Already have an account? ",
                       style: const TextStyle(fontSize: 16, color: Colors.black),
                       children: [
                         TextSpan(
-                          text: 'Inicia sesión',
+                          text: 'Sign in',
                           style: const TextStyle(
                             color: Color.fromARGB(255, 198, 12, 12),
                             fontWeight: FontWeight.bold,

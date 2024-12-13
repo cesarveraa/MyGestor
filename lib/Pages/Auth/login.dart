@@ -54,7 +54,7 @@ class _LoginViewState extends State<LoginView> {
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor completa todos los campos')),
+        const SnackBar(content: Text('Please complete all fields')),
       );
     }
   }
@@ -63,7 +63,7 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Iniciar Sesión'),
+        title: const Text('Log in'),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -81,12 +81,12 @@ class _LoginViewState extends State<LoginView> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  "Iniciar Sesión",
+                  "Log In",
                   style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  "Accede a tu cuenta",
+                  "Sign in to your account",
                   style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                 ),
                 const SizedBox(height: 20),
@@ -94,7 +94,7 @@ class _LoginViewState extends State<LoginView> {
                 TextFormField(
                   controller: emailController,
                   decoration: const InputDecoration(
-                    labelText: 'Correo electrónico',
+                    labelText: 'Email',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -104,7 +104,7 @@ class _LoginViewState extends State<LoginView> {
                   controller: passwordController,
                   obscureText: !isPasswordVisible,
                   decoration: InputDecoration(
-                    labelText: 'Contraseña',
+                    labelText: 'Password',
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -133,7 +133,7 @@ class _LoginViewState extends State<LoginView> {
                             color: Colors.white,
                           )
                         : const Text(
-                            'Iniciar Sesión',
+                            'Log In',
                             style: TextStyle(color: Colors.white),
                           ),
                   ),
@@ -143,11 +143,11 @@ class _LoginViewState extends State<LoginView> {
                 Center(
                   child: RichText(
                     text: TextSpan(
-                      text: "¿No tienes una cuenta? ",
+                      text: "Don't have an account? ",
                       style: const TextStyle(fontSize: 16, color: Colors.black),
                       children: [
                         TextSpan(
-                          text: 'Regístrate',
+                          text: 'Sign in',
                           style: const TextStyle(
                             color: Color.fromARGB(255, 198, 12, 12),
                             fontWeight: FontWeight.bold,

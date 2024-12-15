@@ -117,10 +117,6 @@ This project is licensed under the [MIT License](LICENSE). Feel free to use and 
 
 ---
 
-## **Contact**
 
-- Author: [Your Name]
-- Email: your_email@example.com
-- GitHub: [https://github.com/your_user](https://github.com/your_user)
 
 Thank you for exploring MyGestor! We hope it transforms how you interact with government services.

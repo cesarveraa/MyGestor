@@ -39,7 +39,8 @@ class _DocumentFillScreenState extends State<DocumentFillScreen> {
                 margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 child: ListTile(
                   title: Text(document['title'] ?? 'Untitled Document'),
-                  subtitle: Text("Created by: ${document['createdBy']['name'] ?? 'Unknown'}"),
+                  subtitle: Text(
+                      "Created by: ${document['createdBy']['name'] ?? 'Unknown'}"),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
                     Navigator.push(
@@ -64,7 +65,8 @@ class _DocumentFillScreenState extends State<DocumentFillScreen> {
 class DocumentFormScreen extends StatefulWidget {
   final Map<String, dynamic> documentData;
 
-  const DocumentFormScreen({Key? key, required this.documentData}) : super(key: key);
+  const DocumentFormScreen({Key? key, required this.documentData})
+      : super(key: key);
 
   @override
   State<DocumentFormScreen> createState() => _DocumentFormScreenState();
@@ -73,17 +75,24 @@ class DocumentFormScreen extends StatefulWidget {
 class _DocumentFormScreenState extends State<DocumentFormScreen> {
   final Map<String, dynamic> filledData = {};
   final Map<String, List<String>> suggestions = {};
+  final Map<String, TextEditingController> controllers = {};
+  final Map<String, FocusNode> focusNodes = {};
   bool isLoadingSuggestions = false;
   Timer? _debounce;
 
-  // Replace with your API key and base URL
-  final String apiKey = "xai-Ka81XhLcOHPKYhaPCtcu5uvbadA5Pe9YnbL3dINEB0JjVIMwUC1iVwUSpbMCc0iYlnlSmiKHpIkUTeRt";
+  final String apiKey =
+      "xai-Ka81XhLcOHPKYhaPCtcu5uvbadA5Pe9YnbL3dINEB0JjVIMwUC1iVwUSpbMCc0iYlnlSmiKHpIkUTeRt";
   final String baseUrl = "https://api.x.ai/v1";
 
   Future<List<String>> fetchSuggestions(String query, String field) async {
-    if (query.isEmpty) return [];
+    if (query.isEmpty)
+      return ['- Default Suggestion 1', '- Default Suggestion 2'];
 
     try {
+      setState(() {
+        isLoadingSuggestions = true;
+      });
+
       final response = await http.post(
         Uri.parse("$baseUrl/chat/completions"),
         headers: {
@@ -95,26 +104,38 @@ class _DocumentFormScreenState extends State<DocumentFormScreen> {
           "messages": [
             {
               "role": "system",
-              "content": "You are a helpful assistant for filling out the $field field."
+              "content":
+                  "You are an assistant that helps users autocomplete form fields. Always return only specific suggestions for the current input, formatted as a bulleted list where each line starts with a '-' symbol. Do not provide explanations, instructions, or additional text. For example, if the user inputs 'Jo' for a name field, respond with:\n- John\n- Joanna\n- Joseph\nYour suggestions should directly match or extend the user's input."
             },
-            {"role": "user", "content": "Provide suggestions for: $query"}
+            {
+              "role": "user",
+              "content":
+                  "Field: '$field'. Input: '$query'. Provide autocomplete suggestions."
+            }
           ],
           "max_tokens": 50,
         }),
       );
 
+      setState(() {
+        isLoadingSuggestions = false;
+      });
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final content = data['choices'][0]['message']['content'];
-
+        print(content);
         return extractSuggestions(content);
       } else {
         print("Error: ${response.statusCode}");
-        return [];
+        return ['- Default Suggestion 1', '- Default Suggestion 2'];
       }
     } catch (e) {
       print("Error fetching suggestions: $e");
-      return [];
+      setState(() {
+        isLoadingSuggestions = false;
+      });
+      return ['- Default Suggestion 1', '- Default Suggestion 2'];
     }
   }
 
@@ -136,14 +157,11 @@ class _DocumentFormScreenState extends State<DocumentFormScreen> {
   void onFieldChanged(String query, String field) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
-      setState(() {
-        isLoadingSuggestions = true;
-      });
+      if (query.length < 1) return;
 
       final fieldSuggestions = await fetchSuggestions(query, field);
       setState(() {
         suggestions[field] = fieldSuggestions;
-        isLoadingSuggestions = false;
       });
     });
   }
@@ -151,6 +169,8 @@ class _DocumentFormScreenState extends State<DocumentFormScreen> {
   @override
   void dispose() {
     _debounce?.cancel();
+    controllers.forEach((_, controller) => controller.dispose());
+    focusNodes.forEach((_, node) => node.dispose());
     super.dispose();
   }
 
@@ -190,6 +210,11 @@ class _DocumentFormScreenState extends State<DocumentFormScreen> {
                     ...fields.map((field) {
                       final fieldType = field['type'] ?? 'text';
                       final fieldLabel = field['label'] ?? 'Field';
+
+                      controllers.putIfAbsent(
+                          fieldLabel, () => TextEditingController());
+                      focusNodes.putIfAbsent(fieldLabel, () => FocusNode());
+
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Column(
@@ -204,6 +229,8 @@ class _DocumentFormScreenState extends State<DocumentFormScreen> {
                               Stack(
                                 children: [
                                   TextField(
+                                    focusNode: focusNodes[fieldLabel],
+                                    controller: controllers[fieldLabel],
                                     onChanged: (value) {
                                       filledData[fieldLabel] = value;
                                       onFieldChanged(value, fieldLabel);
@@ -220,10 +247,12 @@ class _DocumentFormScreenState extends State<DocumentFormScreen> {
                                       child: SizedBox(
                                         width: 20,
                                         height: 20,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2),
                                       ),
                                     ),
-                                  if (suggestions[fieldLabel]?.isNotEmpty ?? false)
+                                  if (suggestions[fieldLabel]?.isNotEmpty ??
+                                      false)
                                     Container(
                                       margin: const EdgeInsets.only(top: 60),
                                       decoration: BoxDecoration(
@@ -233,49 +262,31 @@ class _DocumentFormScreenState extends State<DocumentFormScreen> {
                                       ),
                                       child: ListView.builder(
                                         shrinkWrap: true,
-                                        itemCount: suggestions[fieldLabel]?.length ?? 0,
+                                        itemCount:
+                                            suggestions[fieldLabel]?.length ??
+                                                0,
                                         itemBuilder: (context, index) {
                                           return ListTile(
-                                            title: Text(suggestions[fieldLabel]![index]),
+                                            title: Text(suggestions[
+                                                fieldLabel]![index]),
                                             onTap: () {
                                               setState(() {
-                                                filledData[fieldLabel] = suggestions[fieldLabel]![index];
+                                                controllers[fieldLabel]!.text =
+                                                    suggestions[fieldLabel]![
+                                                        index];
+                                                filledData[fieldLabel] =
+                                                    suggestions[fieldLabel]![
+                                                        index];
                                                 suggestions[fieldLabel] = [];
                                               });
+                                              focusNodes[fieldLabel]!
+                                                  .requestFocus();
                                             },
                                           );
                                         },
                                       ),
                                     ),
                                 ],
-                              ),
-                            if (fieldType == 'checkbox')
-                              CheckboxListTile(
-                                title: Text('Select $fieldLabel'),
-                                value: filledData[fieldLabel] ?? false,
-                                onChanged: (value) {
-                                  setState(() {
-                                    filledData[fieldLabel] = value;
-                                  });
-                                },
-                              ),
-                            if (fieldType == 'dropdown')
-                              DropdownButtonFormField<String>(
-                                items: (field['options'] as List<dynamic>? ?? [])
-                                    .map((option) => DropdownMenuItem<String>(
-                                          value: option,
-                                          child: Text(option),
-                                        ))
-                                    .toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    filledData[fieldLabel] = value;
-                                  });
-                                },
-                                decoration: InputDecoration(
-                                  border: const OutlineInputBorder(),
-                                  hintText: 'Select $fieldLabel',
-                                ),
                               ),
                           ],
                         ),
@@ -290,7 +301,6 @@ class _DocumentFormScreenState extends State<DocumentFormScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Handle filled form submission
           print('Filled Data: $filledData');
         },
         backgroundColor: Colors.green,

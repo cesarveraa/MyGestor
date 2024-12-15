@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mygestor/Pages/form_process/form_processor.dart';
+import 'package:mygestor/Pages/document_fill/document_fill_screen.dart';
 import 'dart:io';
 
 import 'package:mygestor/Widgets/drawer_menu.dart';
@@ -53,13 +54,22 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // Método para navegar a la pantalla de llenar documento
+  void _goToFillDocumentScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const DocumentFillScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('MyGestor'),
         centerTitle: true,
-        
       ),
       drawer: const DrawerMenu(),
       body: Center(
@@ -97,6 +107,25 @@ class _HomePageState extends State<HomePage> {
               ),
               child: const Text(
                 'Load Document',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _goToFillDocumentScreen,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                'Fill Document',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.white,

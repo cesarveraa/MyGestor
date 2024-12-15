@@ -59,6 +59,8 @@ class _FormProcessorScreenState extends State<FormProcessorScreen> {
                 "type": "text",
                 "text": "Analyze the attached image and return a JSON representing the entire form structure. "
                     "The JSON should include the document's title, sections, subtitles, and fields. "
+                    "Each field must include its type, label, and additional details. "
+                    "For fields like checkboxes, dropdowns, or radio buttons, also include the list of available options. "
                     "The JSON format should be: "
                     "{ "
                     "\"title\": \"Document Title\", "
@@ -69,7 +71,8 @@ class _FormProcessorScreenState extends State<FormProcessorScreen> {
                     "\"fields\": [ "
                     "{ \"type\": \"text\", \"label\": \"Text Field Label\" }, "
                     "{ \"type\": \"number\", \"label\": \"Number Field Label\" }, "
-                    "{ \"type\": \"checkbox\", \"label\": \"Checkbox Label\" } "
+                    "{ \"type\": \"checkbox\", \"label\": \"Checkbox Label\", \"options\": [\"Option 1\", \"Option 2\"] }, "
+                    "{ \"type\": \"dropdown\", \"label\": \"Dropdown Label\", \"options\": [\"Option A\", \"Option B\"] } "
                     "] "
                     "} "
                     "] "
@@ -128,7 +131,8 @@ class _FormProcessorScreenState extends State<FormProcessorScreen> {
           } else {
             print("Failed to extract JSON from content.");
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Failed to extract JSON from content.")),
+              const SnackBar(
+                  content: Text("Failed to extract JSON from content.")),
             );
           }
         } else {
@@ -138,10 +142,11 @@ class _FormProcessorScreenState extends State<FormProcessorScreen> {
           );
         }
       } else {
-        print(
-            "Request error: ${response.statusCode} ${response.reasonPhrase}");
+        print("Request error: ${response.statusCode} ${response.reasonPhrase}");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: ${response.statusCode} ${response.reasonPhrase}")),
+          SnackBar(
+              content: Text(
+                  "Error: ${response.statusCode} ${response.reasonPhrase}")),
         );
       }
     } catch (e) {

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class ChatWithGrokScreen extends StatefulWidget {
   const ChatWithGrokScreen({Key? key}) : super(key: key);
@@ -13,7 +14,7 @@ class ChatWithGrokScreen extends StatefulWidget {
 
 class _ChatWithGrokScreenState extends State<ChatWithGrokScreen> {
   final TextEditingController _messageController = TextEditingController();
-  final List<Map<String, dynamic>> _messages = []; // Updated to Map<String, dynamic>
+  final List<Map<String, dynamic>> _messages = [];
   File? _selectedImage;
   bool _isLoading = false;
 
@@ -29,8 +30,10 @@ class _ChatWithGrokScreenState extends State<ChatWithGrokScreen> {
     setState(() {
       _messages.add({
         "role": "assistant",
-        "content":
-            "Hi, I’m Grok, your expert in judicial document creation. How can I assist you today?",
+        "content": {
+          "type": "text",
+          "text": "Hi, I’m Grok, your expert in judicial document creation. How can I assist you today?"
+        },
       });
     });
   }
@@ -40,7 +43,7 @@ class _ChatWithGrokScreenState extends State<ChatWithGrokScreen> {
 
     setState(() {
       if (message.isNotEmpty) {
-        _messages.add({"role": "user", "content": message});
+        _messages.add({"role": "user", "content": {"type": "text", "text": message}});
       }
       if (_selectedImage != null) {
         _messages.add({
@@ -62,8 +65,8 @@ class _ChatWithGrokScreenState extends State<ChatWithGrokScreen> {
 
   Widget _buildMessageBubble(Map<String, dynamic> message) {
     final isUser = message["role"] == "user";
-    final bool isImage =
-        message["content"] is Map && message["content"]["type"] == "image_url";
+    final content = message["content"];
+    final messageType = content["type"];
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -74,7 +77,7 @@ class _ChatWithGrokScreenState extends State<ChatWithGrokScreen> {
           color: isUser ? Colors.blue : Colors.orange,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: isImage
+        child: messageType == "image_url"
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -86,17 +89,17 @@ class _ChatWithGrokScreenState extends State<ChatWithGrokScreen> {
                     ),
                   const SizedBox(height: 8),
                   Image.file(
-                    File(message["content"]["image_url"]["url"]),
+                    File(content["image_url"]["url"]),
                     height: 150,
                     fit: BoxFit.cover,
                   ),
                 ],
               )
-            : Text(
-                message["content"] is Map
-                    ? message["content"]["text"] ?? "[Invalid Message]"
-                    : message["content"]?.toString() ?? "",
-                style: const TextStyle(color: Colors.white),
+            : MarkdownBody(
+                data: content["text"] ?? "[Invalid Message]",
+                styleSheet: MarkdownStyleSheet(
+                  p: const TextStyle(color: Colors.white),
+                ),
               ),
       ),
     );
@@ -108,13 +111,11 @@ class _ChatWithGrokScreenState extends State<ChatWithGrokScreen> {
       const String apiKey =
           "xai-Ka81XhLcOHPKYhaPCtcu5uvbadA5Pe9YnbL3dINEB0JjVIMwUC1iVwUSpbMCc0iYlnlSmiKHpIkUTeRt";
 
-      // Encode the image to Base64 if available
       String? base64Image;
       if (_selectedImage != null) {
         base64Image = base64Encode(await _selectedImage!.readAsBytes());
       }
 
-      // Build the content payload
       List<Map<String, dynamic>> contentPayload = [];
 
       if (base64Image != null) {
@@ -150,10 +151,6 @@ class _ChatWithGrokScreenState extends State<ChatWithGrokScreen> {
         "temperature": 0.2,
       };
 
-      // Log request body for debugging
-      print("Request Body: ${jsonEncode(requestBody)}");
-
-      // Send the API request
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {
@@ -163,10 +160,6 @@ class _ChatWithGrokScreenState extends State<ChatWithGrokScreen> {
         body: jsonEncode(requestBody),
       );
 
-      // Log the raw response
-      print("Response Status: ${response.statusCode}");
-      print("Response Body: ${response.body}");
-
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         if (responseData['choices'] != null &&
@@ -174,7 +167,10 @@ class _ChatWithGrokScreenState extends State<ChatWithGrokScreen> {
           setState(() {
             _messages.add({
               "role": "assistant",
-              "content": responseData['choices'][0]['message']['content'],
+              "content": {
+                "type": "text",
+                "text": responseData['choices'][0]['message']['content'],
+              },
             });
           });
         } else {
@@ -184,15 +180,13 @@ class _ChatWithGrokScreenState extends State<ChatWithGrokScreen> {
         _showError("Error ${response.statusCode}: ${response.reasonPhrase}");
       }
     } on FormatException catch (e) {
-      print("FormatException: $e");
       _showError("Failed to parse the response from Grok.");
-    } catch (e, stackTrace) {
-      print("Error: $e\nStack Trace: $stackTrace");
+    } catch (e) {
       _showError("An unexpected error occurred.");
     } finally {
       setState(() {
         _isLoading = false;
-        _selectedImage = null; // Clear the image after sending
+        _selectedImage = null;
       });
     }
   }
@@ -204,7 +198,6 @@ class _ChatWithGrokScreenState extends State<ChatWithGrokScreen> {
         backgroundColor: Colors.red,
       ),
     );
-    print(message);
   }
 
   Future<void> _pickImage() async {
